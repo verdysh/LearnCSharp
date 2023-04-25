@@ -2,6 +2,7 @@
 using DataAccessLayer.Entities;
 using Services.SourceFiles.Dto;
 using System.Configuration;
+using System.Linq.Expressions;
 
 namespace Services.SourceFiles
 {
@@ -62,7 +63,25 @@ namespace Services.SourceFiles
             );
         }
 
-        public List<SourceFileDto> _GetFiles()
+        private static Expression<Func<SourceFile, SourceFileDto>> MapToDto =>
+            (SourceFile s) => new SourceFileDto
+            {
+                Id = s.Id,
+                Path = s.Path
+            };
+
+        // The same as MapToDto
+        private static Expression<Func<SourceFile, SourceFileDto>> MapToDto2 =>
+            s => new SourceFileDto
+            {
+                Id = s.Id,
+                Path = s.Path
+            };
+
+        private List<SourceFileDto> GetFiles_Example2()
+            => _db.SourceFiles.Select(MapToDto).ToList();
+
+        private List<SourceFileDto> GetFiles_Example1()
         {
             var query = _db.SourceFiles.Select(s => new SourceFileDto
             {
