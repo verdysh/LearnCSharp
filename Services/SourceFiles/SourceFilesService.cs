@@ -19,6 +19,49 @@ namespace Services.SourceFiles
             _db = new FilesMonitorDbContext(connectionString);
         }
 
+        private void EXAMPLE_ExtensionMethod()
+        {
+            /////////////////////////////////////////
+            // Where(), Take(), Select() are static separate methods, but we can use them as if they are a part of some class
+            // In this specific case they look like part of IQueryable
+
+            var query1 = _db.SourceFiles.Where(s => s.Id > 5).Take(5).Select(s =>
+                new SourceFileDto
+                {
+                    Id = s.Id,
+                    Path = s.Path
+                }
+            );
+
+            /////////////////////////////////////////
+            // Before we have extensions methods in C# we could use these methods like this
+
+            var whereClause = Queryable.Where(_db.SourceFiles, s => s.Id > 5);
+            var take5Clause = Queryable.Take(whereClause, 5);
+            var selectClause = Queryable.Select(take5Clause, s => new SourceFileDto
+            {
+                Id = s.Id,
+                Path = s.Path
+            });
+            var query2 = selectClause;
+
+            /////////////////////////////////////////
+            // If we wanted to use this methods in one line without creation of additional variables
+
+            var query3 =
+                Queryable.Select(
+                    Queryable.Take(
+                        Queryable.Where(_db.SourceFiles, s => s.Id > 5),
+                        5
+                    ),
+                s => new SourceFileDto
+                {
+                    Id = s.Id,
+                    Path = s.Path
+                }
+            );
+        }
+
         public List<SourceFileDto> _GetFiles()
         {
             var query = _db.SourceFiles.Select(s => new SourceFileDto
