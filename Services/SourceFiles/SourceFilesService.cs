@@ -109,13 +109,20 @@ namespace Services.SourceFiles
             return result;
         }
 
-        public void Add(string path)
+        public SourceFileDto Add(string path)
         {
-            _db.SourceFiles.Add(new SourceFile
+            var entity = new SourceFile
             {
                 Path = path
-            });
+            };
+            _db.SourceFiles.Add(entity);
             _db.SaveChanges();
+
+            return new SourceFileDto
+            {
+                Id = entity.Id,
+                Path = entity.Path
+            };
         }
 
         public void Remove(IEnumerable<int> ids)

@@ -1,6 +1,7 @@
 ﻿using Services.SourceFiles.Dto;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -10,8 +11,8 @@ namespace LearnCSharp.ViewModels
 {    
     public class FilesViewModel : INotifyPropertyChanged
     {
-        private List<SourceFileDto> _files;
-        public List<SourceFileDto> Files
+        private ObservableCollection<SourceFileDto> _files;
+        public ObservableCollection<SourceFileDto> Files
         {
             get { return _files; }
             set
