@@ -18,5 +18,10 @@ namespace DataAccessLayer
         {
             optionsBuilder.UseSqlite(_connectionString);
         }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<SourceFile>().HasIndex(s => new { s.Path }).IsUnique();
+        }
     }
 }

@@ -17,8 +17,16 @@
 
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Path" DisplayMemberBinding="{Binding Path}" />
-                    <!-- Add other columns as needed -->
+                    <GridView.Columns>
+                        <GridViewColumn>
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding Mode=TwoWay, Path=IsSelected}" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn DisplayMemberBinding="{Binding Path}" Header="Path" />
+                    </GridView.Columns>
                 </GridView>
             </ListView.View>
 
