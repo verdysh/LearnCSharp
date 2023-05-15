@@ -4,11 +4,15 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LearnCSharp"
+        xmlns:valueConverters="clr-namespace:LearnCSharp.ValueConverters"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
+    <Window.Resources>
+        <valueConverters:IntToBoolValueConverter x:Key="IntToBoolValueConverter" />
+    </Window.Resources>
     <StackPanel>
         <Button Name="addBtn" Content="Add file" Click="addBtn_Click"/>
-        <Button Name="removeBtn" Content="Remove file" Click="removeBtn_Click"/>
+        <Button Name="removeBtn" Content="Remove file" Click="removeBtn_Click" DataContext="FilesView" IsEnabled="{Binding ElementName=FilesView, Path=SelectedIndex, Converter={StaticResource IntToBoolValueConverter}}"/>
         <ListView x:Name="FilesView"
             ItemsSource="{Binding Files}"
             HorizontalAlignment="Stretch"
@@ -21,7 +25,7 @@
                         <GridViewColumn>
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <CheckBox IsChecked="{Binding Mode=TwoWay, Path=IsSelected}" />
+                                    <CheckBox IsChecked="{Binding Mode=TwoWay, Path=IsSelected}" Click="CheckBox_Click" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>

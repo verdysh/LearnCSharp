@@ -100,5 +100,10 @@ namespace LearnCSharp
             using var service = new SourceFilesService();
             service.Remove(itemsToRemove.Select(i=>i.Id));
         }
+
+        private void CheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            var item = (sender as CheckBox).DataContext as SourceFileDto;
+        }
     }
 }
