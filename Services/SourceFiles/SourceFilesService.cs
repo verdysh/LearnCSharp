@@ -1,5 +1,6 @@
 ﻿using DataAccessLayer;
 using DataAccessLayer.Entities;
+using DataAccessLayer.Repositories;
 using Services.SourceFiles.Dto;
 using System.Configuration;
 using System.Linq.Expressions;
@@ -8,104 +9,26 @@ namespace Services.SourceFiles
 {
     public class SourceFilesService: DisposableService
     {
-        private FilesMonitorDbContext _db;
+        private readonly ISourceFileRepository _sourceFileRepository;
 
-        public SourceFilesService()
+        public SourceFilesService(ISourceFileRepository sourceFileRepository)
         {
-            _db = new FilesMonitorDbContext(ConfigurationManager.ConnectionStrings[nameof(FilesMonitorDbContext)].ConnectionString);
+            _sourceFileRepository = sourceFileRepository;
         }
 
         public SourceFilesService(string connectionString)
         {
-            _db = new FilesMonitorDbContext(connectionString);
-        }
-
-        private void EXAMPLE_ExtensionMethod()
-        {
-            /////////////////////////////////////////
-            // Where(), Take(), Select() are static separate methods, but we can use them as if they are a part of some class
-            // In this specific case they look like part of IQueryable
-
-            var query1 = _db.SourceFiles.Where(s => s.Id > 5).Take(5).Select(s =>
-                new SourceFileDto
-                {
-                    Id = s.Id,
-                    Path = s.Path
-                }
-            );
-
-            /////////////////////////////////////////
-            // Before we have extensions methods in C# we could use these methods like this
-
-            var whereClause = Queryable.Where(_db.SourceFiles, s => s.Id > 5);
-            var take5Clause = Queryable.Take(whereClause, 5);
-            var selectClause = Queryable.Select(take5Clause, s => new SourceFileDto
-            {
-                Id = s.Id,
-                Path = s.Path
-            });
-            var query2 = selectClause;
-
-            /////////////////////////////////////////
-            // If we wanted to use this methods in one line without creation of additional variables
-
-            var query3 =
-                Queryable.Select(
-                    Queryable.Take(
-                        Queryable.Where(_db.SourceFiles, s => s.Id > 5),
-                        5
-                    ),
-                s => new SourceFileDto
-                {
-                    Id = s.Id,
-                    Path = s.Path
-                }
-            );
-        }
-
-        private static Expression<Func<SourceFile, SourceFileDto>> MapToDto =>
-            (SourceFile s) => new SourceFileDto
-            {
-                Id = s.Id,
-                Path = s.Path
-            };
-
-        // The same as MapToDto
-        private static Expression<Func<SourceFile, SourceFileDto>> MapToDto2 =>
-            s => new SourceFileDto
-            {
-                Id = s.Id,
-                Path = s.Path
-            };
-
-        private List<SourceFileDto> GetFiles_Example2()
-            => _db.SourceFiles.Select(MapToDto).ToList();
-
-        private List<SourceFileDto> GetFiles_Example1()
-        {
-            var query = _db.SourceFiles.Select(s => new SourceFileDto
-            {
-                Id = s.Id,
-                Path = s.Path
-            });
-
-            return query.ToList();
+            throw new NotImplementedException();
         }
 
         public List<SourceFileDto> GetFiles()
         {
-            var entities = _db.SourceFiles.ToList();
-            var result = new List<SourceFileDto>();
+            var entities = _sourceFileRepository.GetMany(s => true);
+            
+            var result = entities
+                .Select(MapEntityToDto)
+                .ToList();
 
-            foreach (var entity in entities)
-            {
-                var dto = new SourceFileDto
-                {
-                    Id = entity.Id,
-                    Path = entity.Path
-                };
-                result.Add(dto);
-            }
             return result;
         }
 
@@ -115,36 +38,45 @@ namespace Services.SourceFiles
             {
                 Path = path
             };
-            _db.SourceFiles.Add(entity);
-            _db.SaveChanges();
+            _sourceFileRepository.Add(entity);
+            _sourceFileRepository.SaveChanges();
 
-            return new SourceFileDto
-            {
-                Id = entity.Id,
-                Path = entity.Path
-            };
+            return MapEntityToDto(entity);
         }
 
         public void Remove(IEnumerable<int> ids)
         {
-            foreach(var id in ids)
-            {
-                _db.SourceFiles.Remove(new SourceFile
-                {
-                    Id = id
-                });
-            }
-            _db.SaveChanges();
+            _sourceFileRepository.RemoveRange(
+                ids
+                .Select(
+                    id => new SourceFile
+                    {
+                        Id = id
+                    }
+                )
+                .ToList()
+            );
+
+            _sourceFileRepository.SaveChanges();
         }
 
         protected override void Dispose(bool disposing)
         {
             if(disposing)
             {
-                _db.Dispose();
+                _sourceFileRepository.Dispose();
             }                
 
             base.Dispose(disposing);
+        }
+
+        private SourceFileDto MapEntityToDto(SourceFile entity)
+        {
+            return new SourceFileDto
+            {
+                Id = entity.Id,
+                Path = entity.Path
+            };
         }
     }
 }

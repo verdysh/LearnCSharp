@@ -1,4 +1,5 @@
-﻿using Services.SourceFiles.Dto;
+﻿using LearnCSharp.UI;
+using Services.SourceFiles.Dto;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,8 +12,10 @@ namespace LearnCSharp.ViewModels
 {    
     public class FilesViewModel : INotifyPropertyChanged
     {
-        private ObservableCollection<SourceFileDto> _files;
-        public ObservableCollection<SourceFileDto> Files
+        public bool CheckedFilesExists => _files.Any(f => f.IsChecked);        
+
+        private ObservableCollection<CheckedListItem<SourceFileDto>> _files;
+        public ObservableCollection<CheckedListItem<SourceFileDto>> Files
         {
             get { return _files; }
             set
@@ -26,9 +29,11 @@ namespace LearnCSharp.ViewModels
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void OnPropertyChanged(string propertyName)
+        public void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+
     }
 }

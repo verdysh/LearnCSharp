@@ -1,6 +1,8 @@
 ﻿using DataAccessLayer;
+using LearnCSharp.UI;
 using LearnCSharp.ViewModels;
 using Services.Extensions;
+using Services.Helpers;
 using Services.SourceFiles;
 using Services.SourceFiles.Dto;
 using System;
@@ -33,19 +35,38 @@ namespace LearnCSharp
 
         public MainWindow()
         {
-            using (var db = new FilesMonitorDbContext(ConfigurationManager.ConnectionStrings[nameof(FilesMonitorDbContext)].ConnectionString))
+            using (var db = DbHelper.CreateInstance())
             {
                 db.Database.EnsureCreated();
             }
 
             InitializeComponent();
             
-            using var service = new SourceFilesService();
+            using var service = new SourceFilesService(DbHelper.CreateSourceFileRepositoryInstance());
 
             _viewModel = new FilesViewModel();
-            _viewModel.Files = new ObservableCollection<SourceFileDto>(service.GetFiles());
+            
+            var fileItems = service.GetFiles();
+            _viewModel.Files = new ObservableCollection<CheckedListItem<SourceFileDto>>(
+                fileItems
+                .Select(
+                    f => new CheckedListItem<SourceFileDto>()
+                    {
+                        IsChecked = false,
+                        Item = f
+                    }
+                )
+            );
+
+            _viewModel.Files.CollectionChanged += Files_CollectionChanged;
 
             FilesView.DataContext = _viewModel;
+            removeBtn.DataContext = _viewModel;
+        }
+
+        private void Files_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            _viewModel.OnPropertyChanged(nameof(FilesViewModel.CheckedFilesExists));
         }
 
         private void addBtn_Click(object sender, RoutedEventArgs e)
@@ -54,56 +75,34 @@ namespace LearnCSharp
             if (string.IsNullOrEmpty(input))
                 return;
 
-            using var service = new SourceFilesService();
+            using var service = new SourceFilesService(DbHelper.CreateSourceFileRepositoryInstance());
             var addedItem = service.Add(input);
-            _viewModel.Files.Add(addedItem);
+            _viewModel.Files.Add(new CheckedListItem<SourceFileDto>
+            {
+                IsChecked=false,
+                Item = addedItem
+            });
         }
-
-        /*
-        private void removeBtn_Click_SimplerCode(object sender, RoutedEventArgs e)
-        {
-            if (FilesView.SelectedItems.Count == 0)
-            {
-                MessageBox.Show("Select line(s)");
-                return;
-            }
-            List<SourceFileDto> itemsToRemove = new List<SourceFileDto>();
-            foreach (object item in FilesView.SelectedItems)
-            {
-                SourceFileDto dto = (SourceFileDto)item;
-                itemsToRemove.Add(dto);
-            }
-
-            List<int> ids = new();
-            foreach(var item in itemsToRemove)
-            {
-                ids.Add(item.Id);
-                _viewModel.Files.Remove(item);
-            }
-
-            using var service = new SourceFilesService();
-            service.Remove(ids);
-        }
-        */
 
         private void removeBtn_Click(object sender, RoutedEventArgs e)
         {
-            if (FilesView.SelectedItems.Count == 0)
+            if(!_viewModel.CheckedFilesExists)
             {
-                MessageBox.Show("Select line(s)");
+                MessageBox.Show("Check some line(s)");
                 return;
             }
 
-            var itemsToRemove = FilesView.SelectedItems.Cast<SourceFileDto>().ToList();
+            var itemsToRemove = FilesView.ItemsSource.Cast<CheckedListItem<SourceFileDto>>().Where(c => c.IsChecked).ToList();
             _viewModel.Files.RemoveRange(itemsToRemove);
 
-            using var service = new SourceFilesService();
-            service.Remove(itemsToRemove.Select(i=>i.Id));
+            using var service = new SourceFilesService(DbHelper.CreateSourceFileRepositoryInstance());
+            service.Remove(itemsToRemove.Select(i=>i.Item.Id));
         }
 
         private void CheckBox_Click(object sender, RoutedEventArgs e)
         {
-            var item = (sender as CheckBox).DataContext as SourceFileDto;
+            var item = (sender as CheckBox).DataContext as CheckedListItem<SourceFileDto>;
+            _viewModel.OnPropertyChanged(nameof(FilesViewModel.CheckedFilesExists));
         }
     }
 }
